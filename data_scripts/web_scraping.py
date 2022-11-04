@@ -30,7 +30,8 @@ class PaulGrahamScraper:
 
         for article in self.articles:
             print(article)
-            article_html: str = request.urlopen(self.base_url + article).read()
+            # article_html: str = request.urlopen(self.base_url + article).read()
+            article_html: str = request.urlopen("http://paulgraham.com/notnot.html").read()
             article_soup: bs4.BeautifulSoup = BeautifulSoup(article_html, "html.parser")
 
             # Get article title from title tag
@@ -39,22 +40,39 @@ class PaulGrahamScraper:
             # Get the article content, contained in the 2nd table
             article_content = article_soup.find_all("table")[1]
 
-            # Iterate through text in the first <font> tag
+            # Iterate through text in the first <font> tag, then iterate through the texts the <br> tags within that
             article_text = ""
-            for text in article_content.find_all("font")[0].stripped_strings:
-                article_text += text + "\n"
+
+            # if article_content.find_all("font")[0].contents contains <br> tags, then let that be our iterator list
+            # else, let the first <p> tag be our iterator list
+            if article_content.find_all("font")[0].find_all("br"):
+                x = article_content.find_all("font")[0]
+                iterator_list = article_content.find_all("font")[0].contents
+            else:
+                iterator_list = article_content.find_all("p")
+                print(iterator_list)
+
+
+            article_text = self.extract_text(iterator_list)
 
             print(article_text)
-
-
-
-
 
 
             break
 
         return article_data
 
+    def extract_text(self, iterator_list: List) -> str:
+        article_text = ""
+        for text in iterator_list:
+            if isinstance(text, bs4.element.Tag):
+                if text.name == "p":
+                    return self.extract_text(text)  # Note: this assumes one level of <p> tags
+                else:
+                    article_text += "" if text.string is None else text.string  # Else is for if it's a hyperlink or such.
+            else:
+                article_text += text + "\n"
+        return article_text
 
 def main():
     scraper = PaulGrahamScraper()
