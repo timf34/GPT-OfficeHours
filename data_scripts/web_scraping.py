@@ -35,16 +35,7 @@ class PaulGrahamScraper:
             article_soup: bs4.BeautifulSoup = BeautifulSoup(article_html, "html.parser")
             # print(article_soup.text)
 
-            # Get article title; which is the alt within the first img tag
-            article_titles: str = [x.get("alt") for x in article_soup.find_all("img")]
-            # Filter out None values
-            article_titles = list(filter(None, article_titles))
-            # Check if there is a title
-            if len(article_titles) > 0:
-                article_title: str = article_titles[0]
-                print(article_title)
-
-            # We can also get the title from the title tag
+            # Get article title from title tag
             article_title = article_soup.title.string
             print(article_title)
             break
