@@ -33,11 +33,15 @@ class PaulGrahamScraper:
             article_html: str = request.urlopen(self.base_url + article).read()
             # print(article_html)
             article_soup: bs4.BeautifulSoup = BeautifulSoup(article_html, "html.parser")
-            # print(article_soup.text)
 
             # Get article title from title tag
             article_title = article_soup.title.string
-            print(article_title)
+
+            # Remove whitespace from `article_soup.text`
+            article_text = " ".join(article_soup.text.split())
+            print(article_text)
+
+
             break
 
         return article_data
