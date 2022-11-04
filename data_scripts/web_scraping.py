@@ -31,15 +31,24 @@ class PaulGrahamScraper:
         for article in self.articles:
             print(article)
             article_html: str = request.urlopen(self.base_url + article).read()
-            # print(article_html)
             article_soup: bs4.BeautifulSoup = BeautifulSoup(article_html, "html.parser")
 
             # Get article title from title tag
             article_title = article_soup.title.string
 
-            # Remove whitespace from `article_soup.text`
-            article_text = " ".join(article_soup.text.split())
+            # Get the article content, contained in the 2nd table
+            article_content = article_soup.find_all("table")[1]
+
+            # Iterate through text in the first <font> tag
+            article_text = ""
+            for text in article_content.find_all("font")[0].stripped_strings:
+                article_text += text + "\n"
+
             print(article_text)
+
+
+
+
 
 
             break
