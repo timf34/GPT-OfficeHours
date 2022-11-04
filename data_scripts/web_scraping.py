@@ -40,39 +40,27 @@ class PaulGrahamScraper:
             # Get the article content, contained in the 2nd table
             article_content = article_soup.find_all("table")[1]
 
-            # Iterate through text in the first <font> tag, then iterate through the texts the <br> tags within that
-            article_text = ""
-
-            # if article_content.find_all("font")[0].contents contains <br> tags, then let that be our iterator list
-            # else, let the first <p> tag be our iterator list
-            if article_content.find_all("font")[0].find_all("br"):
-                x = article_content.find_all("font")[0]
-                iterator_list = article_content.find_all("font")[0].contents
-            else:
-                iterator_list = article_content.find_all("p")
-                print(iterator_list)
-
-
-            article_text = self.extract_text(iterator_list)
-
+            # Get the text from the article content
+            article_text = article_content.get_text()
             print(article_text)
 
 
+
+
+
             break
+            # TODO: note that this has probably gotten unneccesarily complicated.
+            #  The recursion is to work with the case of a different file structure as we have for notnot.html
+            #  However I can now see that this doesn't work for our normal essays!
+            #  I am quite certainly over complicating things here, and would be best off just using the .get_text() method
+            #  or the .text attribute!!!! It't not that big a deal to also have footers in it.
+            #  And remember that we are not looking for a perfect thing right now, we just want to get through all the
+            #  steps of this project so I can do as much learning as possible, and not get stuck on any one thing.
+            #  Once I have Mach 1 done, I can go back and make it better!
+            #  I am going to remove all of this code now, after I make a new branch and commit as a checkpoint.
+            #  I will leave this comment here for a little while as a reminder of what I was thinking, and what I need to do!
 
         return article_data
-
-    def extract_text(self, iterator_list: List) -> str:
-        article_text = ""
-        for text in iterator_list:
-            if isinstance(text, bs4.element.Tag):
-                if text.name == "p":
-                    return self.extract_text(text)  # Note: this assumes one level of <p> tags
-                else:
-                    article_text += "" if text.string is None else text.string  # Else is for if it's a hyperlink or such.
-            else:
-                article_text += text + "\n"
-        return article_text
 
 def main():
     scraper = PaulGrahamScraper()
