@@ -1,4 +1,5 @@
 import bs4
+import time
 
 from bs4 import BeautifulSoup
 from typing import List, Dict
@@ -45,11 +46,7 @@ class PaulGrahamScraper:
             for i in range(2, 10):
                 article_content = article_content.replace("\n" * i, "\n")
 
-
-
-
-
-
+            time.sleep(5)
 
 
             # TODO: note that this has probably gotten unneccesarily complicated.
@@ -64,6 +61,7 @@ class PaulGrahamScraper:
             #  I will leave this comment here for a little while as a reminder of what I was thinking, and what I need to do!
 
         return article_data
+
 
 def main():
     scraper = PaulGrahamScraper()
