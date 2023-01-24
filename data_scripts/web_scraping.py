@@ -79,7 +79,9 @@ class PaulGrahamScraper:
         return article_content
 
     def create_txt_file(self, article_title: str, article_content: str) -> None:
-        """Create a .txt file for each article in the self.articles_dir directory. Note that we concatenate the title"""
+        """
+        Create a .txt file for each article in the self.articles_dir directory. Note that we concatenate the title
+        """
         # Remove white spaces from article title
         article_title = article_title.replace(" ", "_")
 
@@ -113,8 +115,14 @@ class PaulGrahamScraper:
             # Create a .txt file for each article
             self.create_txt_file(article_title, article_content)
             article_data.append({"title": article_title, "content": article_content})
+            time.sleep(2)
 
         return article_data
+
+    def do_we_have_all_essays(self) -> bool:
+        """Checks if we have all the essays"""
+        print(f"We have {len(os.listdir(self.articles_dir))}/ {len(self.articles)} essays")
+        return len(os.listdir(self.articles_dir)) == len(self.articles)
 
 
 def experimenting() -> None:
@@ -126,6 +134,7 @@ def experimenting() -> None:
 def prepare_all_articles() -> None:
     scraper = PaulGrahamScraper()
     scraper.get_article_data(scraper.articles)
+    print(scraper.do_we_have_all_essays())
 
 
 def main():
