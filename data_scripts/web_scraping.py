@@ -63,7 +63,22 @@ class PaulGrahamScraper:
 
         return article_title, article_content
 
-    def get_article_data(self, articles: List[str]) -> List[Dict]:
+    @staticmethod
+    def clean_article_content(article_content: str, key: List[str]) -> str:
+        """Cleans/ preprocesses the raw article content"""
+
+        if "1" in key:
+            # Remove newlines greater than 1 (i.e. \n\n -> \n or \n\n\n\n\n -> \n, or \n\n\n -> \n)
+            for i in range(2, 10):
+                article_content = article_content.replace("\n" * i, "\n")
+
+        if "2" in key and "1" not in key:
+            for text in article_content.find_all("font")[0].stripped_strings:
+                article_content += text + "\n"
+
+        return article_content
+
+    def get_article_data(self, articles: List[str], keys: List[str]) -> List[Dict]:
         article_data: List[Dict] = []
 
         for article in articles:
@@ -71,33 +86,40 @@ class PaulGrahamScraper:
 
             article_title, article_content = self.get_article_content(article)
 
-            # Clean data
-
-            # Remove newlines greater than 1 (i.e. \n\n -> \n or \n\n\n\n\n -> \n, or \n\n\n -> \n)
-            for i in range(2, 10):
-                article_content = article_content.replace("\n" * i, "\n")
-
-            # article_text = ""
-            # for text in article_content.find_all("font")[0].stripped_strings:
-            #     article_text += text + "\n"
+            # Clean data...
+            self.clean_article_content(article_content, keys)
 
             article_data.append({"title": article_title, "content": article_content})
             time.sleep(2)
-            print(article_data[0]["content"])
+            print(article_content)
 
         return article_data
 
-def compare_scraping_methods():
+
+def compare_scraping_methods() -> None:
     pass
+
+
+# def extract_text(self, iterator_list: List) -> str:
+#     article_text = ""
+#     for text in iterator_list:
+#         if isinstance(text, bs4.element.Tag):
+#             if text.name == "p":
+#                 return self.extract_text(text)  # Note: this assumes one level of <p> tags
+#             else:
+#                 article_text += "" if text.string is None else text.string  # Else is for if it's a hyperlink or such.
+#         else:
+#             article_text += text + "\n"
+#     return article_text
 
 
 def main():
     scraper = PaulGrahamScraper()
 
     # Test cases for get_article_data
-    test_cases = ["http://www.paulgraham.com/smart.html", "http://paulgraham.com/notnot.html"]
+    test_cases = ["http://www.paulgraham.com/smart.html", "http://paulgraham.com/notnot.html", "http://www.paulgraham.com/airbnbs.html"]
 
-    print(scraper.get_article_data(test_cases))
+    print(scraper.get_article_data(test_cases, keys=["1"]))
 
 
 if __name__ == "__main__":
