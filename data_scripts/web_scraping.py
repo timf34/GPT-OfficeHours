@@ -1,4 +1,5 @@
 import bs4
+import os
 import time
 
 from bs4 import BeautifulSoup
@@ -24,12 +25,14 @@ from urllib import request
 
 
 class PaulGrahamScraper:
-    def __init__(self):
+    def __init__(self, rewrite_files: bool = False):
         self.url: str = "http://www.paulgraham.com/articles.html"
         self.base_url: str = "http://www.paulgraham.com/"
         self.html: str = request.urlopen(self.url).read()
         self.soup: bs4.BeautifulSoup = BeautifulSoup(self.html, "html.parser")
         self.articles: List = self.get_articles()
+        self.articles_dir: str = "../data/pg_essays/"
+        self.rewrite_files: bool = rewrite_files
 
     def get_articles(self) -> List:
         """
@@ -64,21 +67,38 @@ class PaulGrahamScraper:
         return article_title, article_content
 
     @staticmethod
-    def clean_article_content(article_content: str, key: List[str]) -> str:
+    def clean_article_content(article_content: str) -> str:
         """Cleans/ preprocesses the raw article content"""
-
-        if "1" in key:
-            # Remove newlines greater than 1 (i.e. \n\n -> \n or \n\n\n\n\n -> \n, or \n\n\n -> \n)
-            for i in range(2, 10):
-                article_content = article_content.replace("\n" * i, "\n")
-
-        if "2" in key and "1" not in key:
-            for text in article_content.find_all("font")[0].stripped_strings:
-                article_content += text + "\n"
+        # TODO: I can improve this going forward. Should be good enough for now.
+        # Remove newlines greater than 1 (i.e. \n\n -> \n or \n\n\n\n\n -> \n, or \n\n\n -> \n)
+        for i in range(2, 10):
+            article_content = article_content.replace("\n" * i, "\n")
 
         return article_content
 
-    def get_article_data(self, articles: List[str], keys: List[str]) -> List[Dict]:
+    def create_txt_file(self, article_title: str, article_content: str) -> None:
+        """Create a .txt file for each article in the self.articles_dir directory. Note that we concatenate the title"""
+        # Remove white spaces from article title
+        article_title = article_title.replace(" ", "_")
+
+        # Remove invalid characters from article title
+        illegal_characters = [":", "?", "/", "\\", "*", "|", "<", ">", '"', "'",
+                              "!", "@", "#", "$", "%", "^", "&", "(", ")", "-"]
+        for character in illegal_characters:
+            article_title = article_title.replace(character, "")
+
+        if (
+            os.path.exists(self.articles_dir + article_title + ".txt")
+            and not self.rewrite_files
+        ):
+            print("File already exists, skipping...")
+            return
+        # Encode the article content as utf-8
+        article_content = article_content.encode("utf-8")
+        with open(self.articles_dir + article_title + ".txt", "wb") as f:
+            f.write(article_content)
+
+    def get_article_data(self, articles: List[str]) -> List[Dict]:
         article_data: List[Dict] = []
 
         for article in articles:
@@ -87,39 +107,27 @@ class PaulGrahamScraper:
             article_title, article_content = self.get_article_content(article)
 
             # Clean data...
-            self.clean_article_content(article_content, keys)
-
+            self.clean_article_content(article_content)
+            # Create a .txt file for each article
+            self.create_txt_file(article_title, article_content)
             article_data.append({"title": article_title, "content": article_content})
-            time.sleep(2)
-            print(article_content)
 
         return article_data
 
 
-def compare_scraping_methods() -> None:
-    pass
+def experimenting() -> None:
+    scraper = PaulGrahamScraper()
+    test_cases = ["http://www.paulgraham.com/smart.html", "http://paulgraham.com/notnot.html", "http://www.paulgraham.com/airbnbs.html"]
+    print(scraper.get_article_data(test_cases))
 
 
-# def extract_text(self, iterator_list: List) -> str:
-#     article_text = ""
-#     for text in iterator_list:
-#         if isinstance(text, bs4.element.Tag):
-#             if text.name == "p":
-#                 return self.extract_text(text)  # Note: this assumes one level of <p> tags
-#             else:
-#                 article_text += "" if text.string is None else text.string  # Else is for if it's a hyperlink or such.
-#         else:
-#             article_text += text + "\n"
-#     return article_text
+def prepare_all_articles() -> None:
+    scraper = PaulGrahamScraper()
+    scraper.get_article_data(scraper.articles)
 
 
 def main():
-    scraper = PaulGrahamScraper()
-
-    # Test cases for get_article_data
-    test_cases = ["http://www.paulgraham.com/smart.html", "http://paulgraham.com/notnot.html", "http://www.paulgraham.com/airbnbs.html"]
-
-    print(scraper.get_article_data(test_cases, keys=["1"]))
+    prepare_all_articles()
 
 
 if __name__ == "__main__":
