@@ -10,6 +10,8 @@ from urllib import request
 # It should create a list of articles/ urls for the articles.
 # Then it should go through each article and get the data (essay) from each article.
 
+# Note: you might need to run this multiple times right now to get all essays. It timesout sometimes.
+
 
 # Other previous note:
 # TODO: note that this has probably gotten unneccesarily complicated.
