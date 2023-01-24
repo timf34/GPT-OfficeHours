@@ -61,7 +61,11 @@ class PaulGrahamScraper:
         if not article_url.startswith("http"):  # If the article string doesn't start with 'http', then it is a relative link
             article_url = self.base_url + article_url
 
-        article_html: str = request.urlopen(article_url).read()
+        try:
+            article_html: str = request.urlopen(article_url, timeout=10).read()
+        except Exception as e:
+            print(f"Error: {e} for {article_url}")
+            return "", ""
         article_soup: bs4.BeautifulSoup = BeautifulSoup(article_html, "html.parser")
         article_title = article_soup.title.string  # Get article title from title tag
         article_content = article_soup.find_all("table")[1].text  # Get the article content, contained in the 2nd table
@@ -110,12 +114,13 @@ class PaulGrahamScraper:
 
             article_title, article_content = self.get_article_content(article)
 
-            # Clean data...
-            self.clean_article_content(article_content)
-            # Create a .txt file for each article
-            self.create_txt_file(article_title, article_content)
-            article_data.append({"title": article_title, "content": article_content})
-            time.sleep(2)
+            if article_content not in ["", None]:  # If the article content is not empty
+
+                # Clean data...
+                self.clean_article_content(article_content)
+                # Create a .txt file for each article
+                self.create_txt_file(article_title, article_content)
+                article_data.append({"title": article_title, "content": article_content})
 
         return article_data
 
