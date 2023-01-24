@@ -2,7 +2,7 @@ import bs4
 import time
 
 from bs4 import BeautifulSoup
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from urllib import request
 
 # Note: how should the web scraping work?
@@ -50,38 +50,54 @@ class PaulGrahamScraper:
         # Remove duplicates
         return list(set(articles))
 
-    def get_article_data(self) -> List[Dict]:
+    def get_article_content(self, article_url: str) -> Tuple[str, str]:
+        """Given an article URL, returns the title and content of the article (soup style!)"""
+
+        if not article_url.startswith("http"):  # If the article string doesn't start with 'http', then it is a relative link
+            article_url = self.base_url + article_url
+
+        article_html: str = request.urlopen(article_url).read()
+        article_soup: bs4.BeautifulSoup = BeautifulSoup(article_html, "html.parser")
+        article_title = article_soup.title.string  # Get article title from title tag
+        article_content = article_soup.find_all("table")[1].text  # Get the article content, contained in the 2nd table
+
+        return article_title, article_content
+
+    def get_article_data(self, articles: List[str]) -> List[Dict]:
         article_data: List[Dict] = []
 
-        for article in self.articles:
+        for article in articles:
             print(article)
-            article_html: str = request.urlopen(self.base_url + article).read()
-            # article_html: str = request.urlopen("http://paulgraham.com/notnot.html").read()
-            article_soup: bs4.BeautifulSoup = BeautifulSoup(article_html, "html.parser")
 
-            # Get article title from title tag
-            article_title = article_soup.title.string
+            article_title, article_content = self.get_article_content(article)
 
-            # Get the article content, contained in the 2nd table
-            article_content = article_soup.find_all("table")[1].text
-            # print(article_content)
+            # Clean data
 
-            # Remove newlines greater than 1 (i.e. \n\n\n -> \n or \n\n\n\n\n -> \n, or \n\n -> \n)
+            # Remove newlines greater than 1 (i.e. \n\n -> \n or \n\n\n\n\n -> \n, or \n\n\n -> \n)
             for i in range(2, 10):
                 article_content = article_content.replace("\n" * i, "\n")
 
-            time.sleep(5)
-            print(article_data)
+            # article_text = ""
+            # for text in article_content.find_all("font")[0].stripped_strings:
+            #     article_text += text + "\n"
 
+            article_data.append({"title": article_title, "content": article_content})
+            time.sleep(2)
+            print(article_data[0]["content"])
 
         return article_data
+
+def compare_scraping_methods():
+    pass
 
 
 def main():
     scraper = PaulGrahamScraper()
-    print(scraper.articles)
-    # article_data = scraper.get_article_data()
-    # print(article_data)
+
+    # Test cases for get_article_data
+    test_cases = ["http://www.paulgraham.com/smart.html", "http://paulgraham.com/notnot.html"]
+
+    print(scraper.get_article_data(test_cases))
 
 
 if __name__ == "__main__":
